@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>District Boundaries in Leaflet</title>
+  <link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css" />
+  <script src="node_modules/leaflet/dist/leaflet.js"></script>
+  <script src="node_modules/@turf/turf/index.js"></script>
+  <script src="node_modules/turf-buffer/index.js"></script>
+  <script src="node_modules/turf-centroid/index.js"></script>
+  <script src="node_modules/@turf/turf/turf.min.js"></script>
+  <style>
+    body, html {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+
+
+  </style>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="control-container">
+  <input type="text" id="districtInput" placeholder="Enter district name" style="background-color:#F8EDFF; border: none; height:30px;" >
+<button onclick="highlightDistrict()">Search District</button>
+</div>
+
+
+
+<script>
+  const map = L.map('map').setView([20.5937, 78.9629], 5); // Centered on India
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  let districtBoundaries;
+
+  // Function to highlight a specific district
+  function highlightDistrict() {
+    const inputElement = document.getElementById('districtInput');
+    const enteredDistrict = inputElement.value.trim();
+
+    // Clear the map if district boundaries are already shown
+    if (districtBoundaries) {
+      map.removeLayer(districtBoundaries);
+    }
+
+    // Load GeoJSON file dynamically
+    fetch('india_district.geojson')
+      .then(response => response.json())
+      .then(data => {
+        // Find the specific district and highlight it
+        districtBoundaries = L.geoJSON(data, {
+          filter: feature => feature.properties.NAME_2 === enteredDistrict,
+          style: {
+            color: 'blue', // Highlight color
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 0.3
+          }
+        }).addTo(map);
+
+        // Optionally, zoom to the highlighted district
+        map.fitBounds(districtBoundaries.getBounds());
+      })
+      .catch(error => console.error('Error loading GeoJSON:', error));
+  }
+</script>
+
+</body>
+</html>
